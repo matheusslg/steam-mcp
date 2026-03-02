@@ -71,4 +71,34 @@ export const ENDPOINTS = {
     method: "GetFriendList",
     version: 1,
   },
+  GET_PLAYER_BANS: {
+    interface: "ISteamUser",
+    method: "GetPlayerBans",
+    version: 1,
+  },
+  GET_BADGES: {
+    interface: "IPlayerService",
+    method: "GetBadges",
+    version: 1,
+  },
+  GET_WISHLIST: {
+    interface: "IWishlistService",
+    method: "GetWishlist",
+    version: 1,
+  },
+  GET_SCHEMA_FOR_GAME: {
+    interface: "ISteamUserStats",
+    method: "GetSchemaForGame",
+    version: 2,
+  },
+  GET_USER_STATS: {
+    interface: "ISteamUserStats",
+    method: "GetUserStatsForGame",
+    version: 2,
+  },
+  GET_USER_GROUPS: {
+    interface: "ISteamUser",
+    method: "GetUserGroupList",
+    version: 1,
+  },
 } as const;

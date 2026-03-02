@@ -4,14 +4,14 @@ MCP Server for the Steam Web API — access player profiles, game libraries, ach
 
 ## Overview
 
-This [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server connects Claude to the Steam Web API, providing **12 tools** across 6 modules:
+This [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server connects Claude to the Steam Web API, providing **20 tools** across 6 modules:
 
-- **Player** — profiles, levels, vanity URL resolution
-- **Library** — owned games, recently played
-- **Game Info** — store details, news, live player counts
-- **Achievements** — player progress, global unlock percentages
-- **Social** — friends list
-- **Discovery** — Steam store search
+- **Player** — profiles, levels, vanity URL resolution, bans, badges
+- **Library** — owned games, recently played, wishlist
+- **Game Info** — store details, news, live player counts, reviews
+- **Achievements** — player progress, global unlock percentages, game schema, per-game stats
+- **Social** — friends list, group memberships
+- **Discovery** — Steam store search, featured games & sales
 
 ## Requirements
 
@@ -76,6 +76,8 @@ Or add it manually to your MCP config:
 | `get_player_summary` | Profile info — display name, avatar, online status, current game, account age |
 | `get_steam_level` | Account level for a player |
 | `resolve_vanity_url` | Convert a custom profile URL to a 64-bit Steam ID |
+| `get_player_bans` | Check VAC ban, game ban, community ban, and trade ban status |
+| `get_badges` | Badge collection with XP breakdown, player level, and XP to next level |
 
 ### Library
 
@@ -83,6 +85,7 @@ Or add it manually to your MCP config:
 |------|-------------|
 | `get_owned_games` | Full game library with playtime — sortable by playtime, name, or recent |
 | `get_recently_played_games` | Games played in the last two weeks with playtime breakdown |
+| `get_wishlist` | A player's Steam wishlist (depends on privacy settings) |
 
 ### Game Info
 
@@ -91,6 +94,7 @@ Or add it manually to your MCP config:
 | `get_game_details` | Store page data — price, genres, Metacritic, platforms, release date |
 | `get_game_news` | Recent news articles for a game |
 | `get_player_count` | Current number of online players for a game |
+| `get_game_reviews` | Reviews with sentiment summary (score, positive/negative) and review text |
 
 ### Achievements
 
@@ -98,18 +102,22 @@ Or add it manually to your MCP config:
 |------|-------------|
 | `get_player_achievements` | A player's achievement progress for a specific game |
 | `get_global_achievement_percentages` | Global unlock rates — how rare each achievement is |
+| `get_game_schema` | Full list of stats and achievements with display names, descriptions, icons |
+| `get_user_stats_for_game` | A player's per-game stats (kills, wins, etc.) — varies per game |
 
 ### Social
 
 | Tool | Description |
 |------|-------------|
 | `get_friends_list` | A player's friends list with friendship dates |
+| `get_user_groups` | Steam group IDs a player belongs to |
 
 ### Discovery
 
 | Tool | Description |
 |------|-------------|
 | `search_apps` | Search the Steam store by name — returns App IDs, prices, and Metascores |
+| `get_featured_games` | Featured store categories: sales, top sellers, new releases, coming soon |
 
 ## Usage Examples
 
@@ -148,6 +156,35 @@ Just ask Claude naturally — it will combine tools as needed.
 "Look up Celeste on Steam — price, reviews, the works"
 ```
 
+### Bans & Trust
+
+```
+"Is this player legit? Check their VAC ban history"
+"How many bans does player X have?"
+```
+
+### Wishlist & Reviews
+
+```
+"What's on my Steam wishlist?"
+"Show me the reviews for Elden Ring — what are people saying?"
+"What's the review score for Cyberpunk 2077?"
+```
+
+### Store & Sales
+
+```
+"What's on sale on Steam right now?"
+"Show me the top sellers and new releases on Steam"
+```
+
+### Game Stats
+
+```
+"Show me my Counter-Strike stats — kills, deaths, wins"
+"What are all the possible achievements for Hades?"
+```
+
 ### Fun Stats
 
 ```
@@ -168,12 +205,12 @@ steam-mcp/
 │   │   ├── client.ts         # HTTP client with retry logic
 │   │   └── endpoints.ts      # Steam API endpoint constants
 │   └── tools/
-│       ├── player.ts         # get_player_summary, get_steam_level, resolve_vanity_url
-│       ├── library.ts        # get_owned_games, get_recently_played_games
-│       ├── game-info.ts      # get_game_details, get_game_news, get_player_count
-│       ├── achievements.ts   # get_player_achievements, get_global_achievement_percentages
-│       ├── social.ts         # get_friends_list
-│       └── discovery.ts      # search_apps
+│       ├── player.ts         # get_player_summary, get_steam_level, resolve_vanity_url, get_player_bans, get_badges
+│       ├── library.ts        # get_owned_games, get_recently_played_games, get_wishlist
+│       ├── game-info.ts      # get_game_details, get_game_news, get_player_count, get_game_reviews
+│       ├── achievements.ts   # get_player_achievements, get_global_achievement_percentages, get_game_schema, get_user_stats_for_game
+│       ├── social.ts         # get_friends_list, get_user_groups
+│       └── discovery.ts      # search_apps, get_featured_games
 ├── package.json
 ├── tsconfig.json
 ├── LICENSE

@@ -5,11 +5,13 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { steamApiRequest, storeApiRequest } from "../api/client.js";
+import { SteamApiError } from "../api/client.js";
 import { ENDPOINTS } from "../api/endpoints.js";
 import type {
   GameDetails,
   GetNewsResponse,
   GetPlayerCountResponse,
+  GetGameReviewsResponse,
 } from "../types.js";
 
 export function registerGameInfoTools(server: McpServer): void {
@@ -165,6 +167,98 @@ export function registerGameInfoTools(server: McpServer): void {
             ),
           },
         ],
+      };
+    }
+  );
+
+  server.registerTool(
+    "get_game_reviews",
+    {
+      title: "Get Game Reviews",
+      description:
+        "Get reviews for a Steam game with sentiment summary (score, positive/negative counts) and individual review text.",
+      inputSchema: {
+        app_id: z.number().int().describe("Steam App ID of the game."),
+        filter: z
+          .enum(["recent", "updated", "all"])
+          .optional()
+          .default("all")
+          .describe("Filter reviews: 'recent', 'updated', or 'all'. Default: all."),
+        count: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .optional()
+          .default(10)
+          .describe("Number of reviews to return (1-100). Default: 10."),
+      },
+    },
+    async ({ app_id, filter, count }) => {
+      const reviewFilter = filter ?? "all";
+      const reviewCount = count ?? 10;
+
+      const url = new URL(
+        `https://store.steampowered.com/appreviews/${app_id}`
+      );
+      url.searchParams.set("json", "1");
+      url.searchParams.set("filter", reviewFilter);
+      url.searchParams.set("num_per_page", String(reviewCount));
+      url.searchParams.set("language", "english");
+
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new SteamApiError(
+          `Steam Store API ${response.status}: ${response.statusText}`,
+          response.status
+        );
+      }
+
+      const data = (await response.json()) as GetGameReviewsResponse;
+
+      if (!data.success) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ error: `No reviews found for App ID ${app_id}` }),
+            },
+          ],
+        };
+      }
+
+      const summary = data.query_summary;
+      const totalReviews = summary.total_positive + summary.total_negative;
+      const positivePercent =
+        totalReviews > 0
+          ? Math.round((summary.total_positive / totalReviews) * 100)
+          : 0;
+
+      const result = {
+        app_id,
+        summary: {
+          score_description: summary.review_score_desc,
+          total_positive: summary.total_positive,
+          total_negative: summary.total_negative,
+          total_reviews: totalReviews,
+          positive_percent: positivePercent,
+        },
+        reviews: data.reviews.map((r) => ({
+          recommended: r.voted_up,
+          text: r.review,
+          votes_up: r.votes_up,
+          votes_funny: r.votes_funny,
+          playtime_at_review_hours: r.playtime_at_review
+            ? Math.round(r.playtime_at_review / 60)
+            : null,
+          author_playtime_hours: Math.round(r.author.playtime_forever / 60),
+          created: new Date(r.timestamp_created * 1000).toISOString(),
+          early_access: r.written_during_early_access,
+        })),
+      };
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
       };
     }
   );

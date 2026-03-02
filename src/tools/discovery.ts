@@ -5,7 +5,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { storeApiRequest } from "../api/client.js";
-import type { StoreSearchResponse } from "../types.js";
+import type { StoreSearchResponse, GetFeaturedCategoriesResponse, FeaturedItem } from "../types.js";
 
 export function registerDiscoveryTools(server: McpServer): void {
   server.registerTool(
@@ -52,6 +52,56 @@ export function registerDiscoveryTools(server: McpServer): void {
             : { final: "Free", discount_percent: 0 },
           metascore: item.metascore ?? null,
         })),
+      };
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "get_featured_games",
+    {
+      title: "Get Featured Games",
+      description:
+        "Get Steam store featured categories: specials (sales), top sellers, new releases, and coming soon.",
+      inputSchema: {
+        country_code: z
+          .string()
+          .length(2)
+          .optional()
+          .default("US")
+          .describe("Two-letter country code for regional pricing (e.g., 'US', 'BR'). Default: US."),
+      },
+    },
+    async ({ country_code }) => {
+      const cc = country_code ?? "US";
+
+      const data = await storeApiRequest<GetFeaturedCategoriesResponse>(
+        "featuredcategories",
+        { cc }
+      );
+
+      function mapItems(items: FeaturedItem[]) {
+        return (items ?? []).map((item) => ({
+          app_id: item.id,
+          name: item.name,
+          discount_percent: item.discount_percent,
+          final_price: item.final_price === 0
+            ? "Free"
+            : `$${(item.final_price / 100).toFixed(2)}`,
+          original_price: item.original_price
+            ? `$${(item.original_price / 100).toFixed(2)}`
+            : null,
+        }));
+      }
+
+      const result = {
+        specials: mapItems(data.specials?.items),
+        top_sellers: mapItems(data.top_sellers?.items),
+        new_releases: mapItems(data.new_releases?.items),
+        coming_soon: mapItems(data.coming_soon?.items),
       };
 
       return {

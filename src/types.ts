@@ -44,6 +44,41 @@ export interface ResolveVanityURLResponse {
   };
 }
 
+export interface PlayerBan {
+  SteamId: string;
+  CommunityBanned: boolean;
+  VACBanned: boolean;
+  NumberOfVACBans: number;
+  DaysSinceLastBan: number;
+  NumberOfGameBans: number;
+  EconomyBan: string;
+}
+
+export interface GetPlayerBansResponse {
+  players: PlayerBan[];
+}
+
+export interface Badge {
+  badgeid: number;
+  level: number;
+  completion_time: number;
+  xp: number;
+  scarcity: number;
+  appid?: number;
+  communityitemid?: string;
+  border_color?: number;
+}
+
+export interface GetBadgesResponse {
+  response: {
+    badges: Badge[];
+    player_xp: number;
+    player_level: number;
+    player_xp_needed_to_level_up: number;
+    player_xp_needed_current_level: number;
+  };
+}
+
 // --- Library ---
 
 export interface OwnedGame {
@@ -78,6 +113,18 @@ export interface GetRecentlyPlayedGamesResponse {
   response: {
     total_count: number;
     games: RecentlyPlayedGame[];
+  };
+}
+
+export interface WishlistItem {
+  appid: number;
+  priority: number;
+  date_added: number;
+}
+
+export interface GetWishlistResponse {
+  response: {
+    items: WishlistItem[];
   };
 }
 
@@ -148,6 +195,44 @@ export interface GetPlayerCountResponse {
   };
 }
 
+export interface ReviewAuthor {
+  steamid: string;
+  num_games_owned: number;
+  num_reviews: number;
+  playtime_forever: number;
+  playtime_last_two_weeks: number;
+  last_played: number;
+}
+
+export interface Review {
+  recommendationid: string;
+  author: ReviewAuthor;
+  review: string;
+  timestamp_created: number;
+  timestamp_updated: number;
+  voted_up: boolean;
+  votes_up: number;
+  votes_funny: number;
+  weighted_vote_score: string;
+  steam_purchase: boolean;
+  received_for_free: boolean;
+  written_during_early_access: boolean;
+  playtime_at_review?: number;
+}
+
+export interface GetGameReviewsResponse {
+  success: number;
+  query_summary: {
+    num_reviews: number;
+    review_score: number;
+    review_score_desc: string;
+    total_positive: number;
+    total_negative: number;
+    total_reviews: number;
+  };
+  reviews: Review[];
+}
+
 // --- Achievements ---
 
 export interface PlayerAchievement {
@@ -178,6 +263,52 @@ export interface GetGlobalAchievementPercentagesResponse {
   };
 }
 
+export interface GameSchemaAchievement {
+  name: string;
+  defaultvalue: number;
+  displayName: string;
+  hidden: number;
+  description?: string;
+  icon: string;
+  icongray: string;
+}
+
+export interface GameSchemaStat {
+  name: string;
+  defaultvalue: number;
+  displayName: string;
+}
+
+export interface GetGameSchemaResponse {
+  game: {
+    gameName: string;
+    gameVersion: string;
+    availableGameStats?: {
+      achievements?: GameSchemaAchievement[];
+      stats?: GameSchemaStat[];
+    };
+  };
+}
+
+export interface UserStat {
+  name: string;
+  value: number;
+}
+
+export interface UserAchievement {
+  name: string;
+  achieved: number;
+}
+
+export interface GetUserStatsForGameResponse {
+  playerstats: {
+    steamID: string;
+    gameName: string;
+    stats?: UserStat[];
+    achievements?: UserAchievement[];
+  };
+}
+
 // --- Social ---
 
 export interface Friend {
@@ -189,6 +320,13 @@ export interface Friend {
 export interface GetFriendListResponse {
   friendslist: {
     friends: Friend[];
+  };
+}
+
+export interface GetUserGroupsResponse {
+  response: {
+    success: boolean;
+    groups: Array<{ gid: string }>;
   };
 }
 
@@ -210,4 +348,31 @@ export interface StoreSearchItem {
 export interface StoreSearchResponse {
   total: number;
   items: StoreSearchItem[];
+}
+
+export interface FeaturedItem {
+  id: number;
+  name: string;
+  discounted: boolean;
+  discount_percent: number;
+  original_price?: number;
+  final_price: number;
+  currency: string;
+  large_capsule_image: string;
+  small_capsule_image: string;
+  header_image?: string;
+}
+
+export interface FeaturedCategory {
+  id: string;
+  name: string;
+  items: FeaturedItem[];
+}
+
+export interface GetFeaturedCategoriesResponse {
+  specials: FeaturedCategory;
+  coming_soon: FeaturedCategory;
+  top_sellers: FeaturedCategory;
+  new_releases: FeaturedCategory;
+  [key: string]: FeaturedCategory | number | string;
 }
