@@ -43,7 +43,7 @@ Or add it manually to your MCP config:
       "args": ["/absolute/path/to/steam-mcp/dist/index.js"],
       "env": {
         "STEAM_API_KEY": "your_key_here",
-        "STEAM_ID": "76561198000000000"
+        "STEAM_ID": "your_steam_id_here"
       }
     }
   }
