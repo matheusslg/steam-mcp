@@ -11,6 +11,8 @@ import type {
   GetPlayerSummariesResponse,
   GetSteamLevelResponse,
   ResolveVanityURLResponse,
+  GetPlayerBansResponse,
+  GetBadgesResponse,
 } from "../types.js";
 
 const PERSONA_STATES: Record<number, string> = {
@@ -164,6 +166,105 @@ export function registerPlayerTools(server: McpServer): void {
             ),
           },
         ],
+      };
+    }
+  );
+
+  server.registerTool(
+    "get_player_bans",
+    {
+      title: "Get Player Bans",
+      description:
+        "Check a player's ban status — VAC bans, game bans, community ban, trade ban.",
+      inputSchema: {
+        steam_id: z
+          .string()
+          .optional()
+          .describe(
+            "64-bit Steam ID. Falls back to STEAM_ID env var if not provided."
+          ),
+      },
+    },
+    async ({ steam_id }) => {
+      const id = resolveSteamId(steam_id);
+
+      const data = await steamApiRequest<GetPlayerBansResponse>(
+        ENDPOINTS.GET_PLAYER_BANS,
+        { steamids: id }
+      );
+
+      const player = data.players[0];
+      if (!player) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ error: `No ban data found for Steam ID: ${id}` }),
+            },
+          ],
+        };
+      }
+
+      const result = {
+        steam_id: player.SteamId,
+        vac_banned: player.VACBanned,
+        number_of_vac_bans: player.NumberOfVACBans,
+        days_since_last_ban: player.DaysSinceLastBan,
+        number_of_game_bans: player.NumberOfGameBans,
+        community_banned: player.CommunityBanned,
+        economy_ban: player.EconomyBan,
+      };
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "get_badges",
+    {
+      title: "Get Badges",
+      description:
+        "Get a player's badge collection with XP breakdown, player level, and XP needed for next level.",
+      inputSchema: {
+        steam_id: z
+          .string()
+          .optional()
+          .describe(
+            "64-bit Steam ID. Falls back to STEAM_ID env var if not provided."
+          ),
+      },
+    },
+    async ({ steam_id }) => {
+      const id = resolveSteamId(steam_id);
+
+      const data = await steamApiRequest<GetBadgesResponse>(
+        ENDPOINTS.GET_BADGES,
+        { steamid: id }
+      );
+
+      const resp = data.response;
+      const badges = resp.badges ?? [];
+
+      const result = {
+        steam_id: id,
+        player_level: resp.player_level,
+        player_xp: resp.player_xp,
+        xp_needed_to_level_up: resp.player_xp_needed_to_level_up,
+        total_badges: badges.length,
+        badges: badges.map((b) => ({
+          badge_id: b.badgeid,
+          app_id: b.appid ?? null,
+          level: b.level,
+          xp: b.xp,
+          completion_time: new Date(b.completion_time * 1000).toISOString(),
+          scarcity: b.scarcity,
+        })),
+      };
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
       };
     }
   );

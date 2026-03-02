@@ -10,6 +10,8 @@ import { resolveSteamId } from "../config.js";
 import type {
   GetPlayerAchievementsResponse,
   GetGlobalAchievementPercentagesResponse,
+  GetGameSchemaResponse,
+  GetUserStatsForGameResponse,
 } from "../types.js";
 
 export function registerAchievementTools(server: McpServer): void {
@@ -109,6 +111,107 @@ export function registerAchievementTools(server: McpServer): void {
         achievements: achievements.map((a) => ({
           name: a.name,
           global_percent: Math.round(a.percent * 100) / 100,
+        })),
+      };
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "get_game_schema",
+    {
+      title: "Get Game Schema",
+      description:
+        "Get the full list of stats and achievements for a game, including display names, descriptions, and icons.",
+      inputSchema: {
+        app_id: z.number().int().describe("Steam App ID of the game."),
+      },
+    },
+    async ({ app_id }) => {
+      const data = await steamApiRequest<GetGameSchemaResponse>(
+        ENDPOINTS.GET_SCHEMA_FOR_GAME,
+        { appid: app_id, l: "english" }
+      );
+
+      const game = data.game;
+      const stats = game.availableGameStats?.stats ?? [];
+      const achievements = game.availableGameStats?.achievements ?? [];
+
+      const result = {
+        app_id,
+        game_name: game.gameName,
+        total_stats: stats.length,
+        total_achievements: achievements.length,
+        achievements: achievements.map((a) => ({
+          api_name: a.name,
+          display_name: a.displayName,
+          description: a.description ?? null,
+          hidden: a.hidden === 1,
+          icon: a.icon,
+          icon_gray: a.icongray,
+        })),
+        stats: stats.map((s) => ({
+          api_name: s.name,
+          display_name: s.displayName,
+          default_value: s.defaultvalue,
+        })),
+      };
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "get_user_stats_for_game",
+    {
+      title: "Get User Stats for Game",
+      description:
+        "Get a player's individual game stats (kills, deaths, wins, etc.). Stats vary per game.",
+      inputSchema: {
+        app_id: z.number().int().describe("Steam App ID of the game."),
+        steam_id: z
+          .string()
+          .optional()
+          .describe("64-bit Steam ID. Falls back to STEAM_ID env var."),
+      },
+    },
+    async ({ app_id, steam_id }) => {
+      const id = resolveSteamId(steam_id);
+
+      let data: GetUserStatsForGameResponse;
+      try {
+        data = await steamApiRequest<GetUserStatsForGameResponse>(
+          ENDPOINTS.GET_USER_STATS,
+          { appid: app_id, steamid: id }
+        );
+      } catch (err) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({
+                error: `Could not fetch stats for app ${app_id}. The game may not track stats, or the profile may be private.`,
+                details: err instanceof Error ? err.message : String(err),
+              }),
+            },
+          ],
+        };
+      }
+
+      const playerStats = data.playerstats;
+
+      const result = {
+        steam_id: playerStats.steamID,
+        game: playerStats.gameName,
+        total_stats: (playerStats.stats ?? []).length,
+        stats: (playerStats.stats ?? []).map((s) => ({
+          name: s.name,
+          value: s.value,
         })),
       };
 

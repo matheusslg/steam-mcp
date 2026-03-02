@@ -10,6 +10,7 @@ import { resolveSteamId } from "../config.js";
 import type {
   GetOwnedGamesResponse,
   GetRecentlyPlayedGamesResponse,
+  GetWishlistResponse,
 } from "../types.js";
 
 function formatPlaytime(minutes: number): string {
@@ -126,6 +127,60 @@ export function registerLibraryTools(server: McpServer): void {
           name: g.name,
           playtime_2weeks: formatPlaytime(g.playtime_2weeks),
           playtime_total: formatPlaytime(g.playtime_forever),
+        })),
+      };
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "get_wishlist",
+    {
+      title: "Get Wishlist",
+      description:
+        "Get a player's Steam wishlist. Depends on the user's privacy settings.",
+      inputSchema: {
+        steam_id: z
+          .string()
+          .optional()
+          .describe("64-bit Steam ID. Falls back to STEAM_ID env var."),
+      },
+    },
+    async ({ steam_id }) => {
+      const id = resolveSteamId(steam_id);
+
+      let data: GetWishlistResponse;
+      try {
+        data = await steamApiRequest<GetWishlistResponse>(
+          ENDPOINTS.GET_WISHLIST,
+          { steamid: id }
+        );
+      } catch (err) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({
+                error: "Could not fetch wishlist. The profile may be private.",
+                details: err instanceof Error ? err.message : String(err),
+              }),
+            },
+          ],
+        };
+      }
+
+      const items = data.response.items ?? [];
+
+      const result = {
+        steam_id: id,
+        total_items: items.length,
+        items: items.map((item) => ({
+          app_id: item.appid,
+          priority: item.priority,
+          date_added: new Date(item.date_added * 1000).toISOString(),
         })),
       };
 
