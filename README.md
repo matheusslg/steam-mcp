@@ -18,7 +18,17 @@ This [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server con
 - **Node.js** 20+
 - **Steam Web API Key** — get one at [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey)
 
-## Quick Start
+## Installation
+
+Just ask Claude to install this MCP server using the repo URL:
+
+```
+Install the MCP server from https://github.com/matheusslg/steam-mcp
+```
+
+Claude will handle cloning, building, and configuring it for you.
+
+## Quick Start (Manual)
 
 ```bash
 # Clone
