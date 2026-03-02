@@ -113,18 +113,47 @@ Or add it manually to your MCP config:
 
 ## Usage Examples
 
+Just ask Claude naturally — it will combine tools as needed.
+
+### Game Library Analysis
+
 ```
-"What's my Steam profile info?"
-"Show me my top 10 most played games"
-"What games have I played this week?"
-"How many people are playing Counter-Strike 2 right now?"
-"Look up the game details for Elden Ring"
-"What are the rarest achievements in Hades?"
-"Show me my achievement progress in Hollow Knight"
-"Get the latest news for Dota 2"
-"Search Steam for games called Celeste"
-"Who's on my friends list?"
-"What's the Steam ID for gabelogannewell?"
+"How much is my Steam library worth?"
+"Show me my shame list — games I own but have 0 hours played"
+"What am I actually playing? Show me my last two weeks"
+```
+
+### Achievement Hunting
+
+```
+"What are my rarest achievements? Find ones less than 5% of players have"
+"Which games am I closest to 100% completion on?"
+"Give me an achievement difficulty report for Elden Ring"
+```
+
+### Social / Friends
+
+```
+"What are my friends playing right now?"
+"Compare my game library with my friend's — what do we both own?"
+"Rank my friends by Steam level"
+"Who's the OG? Rank my friends by account creation date"
+```
+
+### Game Intel
+
+```
+"Is Battlefield 2042 alive? Check the player count"
+"Get me a news digest for the games I've played recently"
+"Look up Celeste on Steam — price, reviews, the works"
+```
+
+### Fun Stats
+
+```
+"Roast my Steam profile — age, level, games owned vs played, hours wasted"
+"What games define my friend group? Most commonly owned games across all my friends"
+"Give me my Counter-Strike addiction report"
 ```
 
 ## Project Structure
