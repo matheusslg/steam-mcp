@@ -1,0 +1,46 @@
+{
+  "name": "steam-mcp",
+  "version": "1.0.0",
+  "description": "MCP Server for Steam Web API",
+  "main": "dist/index.js",
+  "bin": {
+    "steam-mcp": "./dist/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean"
+  },
+  "author": "matheusslg",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matheusslg/steam-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/matheusslg/steam-mcp/issues"
+  },
+  "homepage": "https://github.com/matheusslg/steam-mcp#readme",
+  "keywords": [
+    "mcp",
+    "steam",
+    "valve",
+    "gaming",
+    "claude",
+    "anthropic"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "zod": "^3.24.0"
+  }
+}
